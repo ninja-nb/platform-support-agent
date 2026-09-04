@@ -1,4 +1,5 @@
-PY ?= python3
+VENV_PY := $(CURDIR)/.venv/bin/python
+PY ?= $(if $(wildcard $(VENV_PY)),$(VENV_PY),python3)
 export PYTHONPATH := src
 
 .PHONY: help setup index eval test lint ui up down clean
@@ -13,7 +14,7 @@ help:
 	@echo "make up      - docker compose up"
 
 setup:
-	uv venv && uv pip install -e '.[dev]'
+	uv venv --allow-existing && uv pip install -e '.[dev]'
 
 index:
 	$(PY) -m psa.rag.index
@@ -26,7 +27,7 @@ test:
 	$(PY) -m pytest -q
 
 lint:
-	$(PY) -m ruff check src tests
+	$(PY) -m ruff check src tests ui
 
 ui:
 	$(PY) -m streamlit run ui/app.py
