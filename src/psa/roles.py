@@ -34,6 +34,21 @@ class ConfirmationRequired(Exception):
         self.preview = preview
 
 
+class PreconditionFailed(Exception):
+    """Raised when an action is permitted but not *appropriate* for current state.
+
+    Distinct from PermissionDenied on purpose. The caller may be fully authorized
+    and still be asking for something the runbook says will make the incident
+    worse. Encoding that as a tool precondition means a model error, or a stressed
+    human, cannot cause it: the check does not depend on the model reasoning
+    correctly.
+    """
+
+    def __init__(self, message: str, guidance: str = ""):
+        super().__init__(message)
+        self.guidance = guidance
+
+
 @dataclass(frozen=True)
 class ToolPolicy:
     allowed_roles: frozenset[str]

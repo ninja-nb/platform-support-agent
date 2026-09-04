@@ -28,6 +28,9 @@ class Usage:
 class ToolRequest:
     name: str
     args: dict = field(default_factory=dict)
+    # Provider-assigned id. OpenAI requires each tool result to reference the
+    # call it answers; providers that do not need it leave this None.
+    call_id: str | None = None
 
 
 @dataclass
@@ -51,6 +54,7 @@ class Turn:
     args: dict
     result: dict | None = None
     error: str | None = None
+    call_id: str | None = None
 
 
 @runtime_checkable

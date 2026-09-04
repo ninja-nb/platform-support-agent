@@ -66,12 +66,16 @@ def test_sre_restart_succeeds_with_token():
 
 
 def test_confirmation_token_is_not_transferable():
-    """A token minted for one target must not authorize a different one."""
+    """A token minted for one target must not authorize a different one.
+
+    Both targets are wedged services so the runbook precondition passes for each,
+    isolating the token check as the thing under test.
+    """
     token = _confirm_token("billing-worker", "prod-west", ONCALL)
     with pytest.raises(ConfirmationRequired):
         call_tool(
             "restart_service",
-            {"service": "checkout-api", "environment": "prod-east", "confirm_token": token},
+            {"service": "reports-worker", "environment": "staging-west", "confirm_token": token},
             role="sre",
             user=ONCALL,
         )

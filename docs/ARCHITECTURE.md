@@ -70,7 +70,7 @@ should trigger it.
 
 | Gap | Consequence | ADR |
 |---|---|---|
-| Providers are interfaces only; `next_step` raises `NotImplementedError` | Every number in `EVALS.md` comes from the rule-based stub, so provider portability (R15) is unproven | [0011](adr/0011-providers-behind-a-protocol.md) |
+| OpenAI `next_step` is implemented and unit-tested against a fake client but never run against the live API; Vertex still raises `NotImplementedError` | Every number in `EVALS.md` comes from the rule-based stub, so provider portability (R15) is unproven | [0011](adr/0011-providers-behind-a-protocol.md) |
 | Single-turn; no session memory, so "restart it" does not resolve against the previous turn's service | A confirmation is approved without the agent retaining why it was proposed | [0013](adr/0013-port-the-loop-to-langgraph-for-session-memory.md) |
 | `PSA_MIN_SCORE` is too permissive | `unanswerable-015` answers an off-corpus question with a citation, which is the failure R2 exists to prevent | [0016](adr/0016-separate-the-refusal-threshold-from-the-retrieval-threshold.md) |
 | Retrieved corpus content is trusted text; no prompt-injection defence | Threat T6, open | [0017](adr/0017-treat-retrieved-passages-as-data.md) |

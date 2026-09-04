@@ -15,7 +15,7 @@ from psa.agent.policy import classify, extract_citations
 from psa.config import settings
 from psa.mcp_server import call_tool
 from psa.providers import Provider, Turn, Usage, get_provider
-from psa.roles import ConfirmationRequired, PermissionDenied
+from psa.roles import ConfirmationRequired, PermissionDenied, PreconditionFailed
 
 MAX_STEPS = 6
 
@@ -30,6 +30,8 @@ class AgentResult:
     tools_called: list[str] = field(default_factory=list)
     turns: list[Turn] = field(default_factory=list)
     denials: list[str] = field(default_factory=list)
+    # Actions the caller was authorized for but that the runbook precondition refused.
+    blocked_actions: list[str] = field(default_factory=list)
     pending_confirmation: dict | None = None
     grounded: bool = False
     usage: Usage = field(default_factory=Usage)
@@ -51,6 +53,7 @@ def run(
     history: list[Turn] = []
     tools_called: list[str] = []
     denials: list[str] = []
+    blocked: list[str] = []
     pending: dict | None = None
     usage = Usage()
     grounded = False
@@ -70,7 +73,7 @@ def run(
 
         for request in step.tool_calls:
             tools_called.append(request.name)
-            turn = Turn(tool=request.name, args=dict(request.args))
+            turn = Turn(tool=request.name, args=dict(request.args), call_id=request.call_id)
             try:
                 turn.result = call_tool(request.name, request.args, role=role, user=user)
                 if request.name == "search_docs":
@@ -94,6 +97,11 @@ def run(
             except PermissionDenied as exc:
                 denials.append(str(exc))
                 turn.error = str(exc)
+            except PreconditionFailed as exc:
+                # Authorized but inappropriate. Keep reasoning: the guidance names
+                # the action that *is* correct, and the answer should carry it.
+                blocked.append(str(exc))
+                turn.error = f"{exc} {exc.guidance}".strip()
             except (TypeError, KeyError) as exc:
                 turn.error = f"tool call failed: {exc}"
             history.append(turn)
@@ -124,6 +132,7 @@ def run(
         tools_called=tools_called,
         turns=history,
         denials=denials,
+        blocked_actions=blocked,
         pending_confirmation=pending,
         grounded=grounded,
         usage=usage,

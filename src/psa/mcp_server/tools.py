@@ -21,6 +21,7 @@ from psa.rag.retrieve import search as search_index
 from psa.roles import (
     ConfirmationRequired,
     PermissionDenied,
+    PreconditionFailed,
     authorize,
     restricted_to_own_records,
 )
@@ -144,15 +145,53 @@ def _confirm_token(service: str, environment: str, user: str) -> str:
     return hashlib.sha256(f"restart|{service}|{environment}|{user}".encode()).hexdigest()[:12]
 
 
+def _assert_restart_is_appropriate(service: str, environment: str) -> None:
+    """Enforce the runbook precondition for a restart: the service must be wedged.
+
+    `err-005` states a restart is appropriate only when the ready count is zero,
+    and that restarting a *saturated* service makes 503s worse by removing the
+    remaining serving capacity. That rule is encoded here rather than left to the
+    model, so it holds even when the model is wrong or the caller is insistent.
+
+    Fails closed: if current state cannot be read, the restart does not proceed.
+    """
+    env = _load("environments.json").get(environment)
+    if env is None:
+        raise PreconditionFailed(
+            f"Cannot verify the state of {environment}, so I will not restart anything.",
+            guidance=f"Unknown environment {environment!r}. Confirm the name first.",
+        )
+    svc = env["services"].get(service)
+    if svc is None:
+        raise PreconditionFailed(
+            f"{service} was not found in {environment}, so there is nothing to restart.",
+            guidance=f"Known services in {environment}: {', '.join(sorted(env['services']))}.",
+        )
+
+    ready = (svc.get("workers") or {}).get("ready")
+    desired = (svc.get("workers") or {}).get("desired")
+    if ready:
+        raise PreconditionFailed(
+            f"A restart is not appropriate for {service} in {environment}: "
+            f"{ready} of {desired} workers are ready and still serving traffic.",
+            guidance=(
+                "Per [err-005] a restart only applies to a wedged service with zero ready "
+                "workers. For a saturated service, scale out instead: raising the worker "
+                "count does not interrupt existing connections, whereas a restart removes "
+                "the capacity that is still working."
+            ),
+        )
+
+
 def restart_service(service: str, environment: str, confirm_token: str | None = None,
                     role: str = "sre", user: str = "") -> dict:
     """Restart a service. Requires the `sre` role AND a human confirmation round-trip.
 
-    First call returns a confirmation prompt rather than acting. The caller must
-    re-issue the call with the returned token. The agent cannot mint the token
-    itself from the prompt alone without a human relaying it, which is what makes
-    this a gate rather than a speed bump.
+    Order matters: the runbook precondition is checked *before* the confirmation
+    prompt, so a human is never asked to approve an action that would be refused
+    anyway. Confirmation fatigue is a real failure mode; do not ask needlessly.
     """
+    _assert_restart_is_appropriate(service, environment)
     expected = _confirm_token(service, environment, user)
     if confirm_token != expected:
         raise ConfirmationRequired(
@@ -294,6 +333,10 @@ def call_tool(name: str, args: dict | None = None, *, role: str | None = None,
         result = impl(**args, role=role, user=user)
     except ConfirmationRequired as exc:
         audit.record(user=user, role=role, tool=name, outcome="confirmation_required",
+                     args=args, detail=str(exc), latency_ms=elapsed())
+        raise
+    except PreconditionFailed as exc:
+        audit.record(user=user, role=role, tool=name, outcome="precondition_failed",
                      args=args, detail=str(exc), latency_ms=elapsed())
         raise
     except PermissionDenied as exc:

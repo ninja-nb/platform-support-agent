@@ -18,6 +18,7 @@ from psa.providers.base import Provider, Step, ToolRequest, Turn, Usage
 _ENV_RE = re.compile(r"\b((?:prod|staging|sandbox)-[a-z0-9]+)\b", re.IGNORECASE)
 _SERVICE_RE = re.compile(r"\b([a-z]+-(?:api|worker|runner))\b", re.IGNORECASE)
 _TICKET_RE = re.compile(r"\b(TIC-\d+)\b", re.IGNORECASE)
+_RESTART_RE = re.compile(r"\b(restart|bounce|cycle it|reboot)\b", re.IGNORECASE)
 
 
 class StubProvider(Provider):
@@ -47,6 +48,22 @@ class StubProvider(Provider):
                 args["service"] = service.group(1)
             return Step(tool_calls=[ToolRequest("get_status", args)], usage=usage)
 
+        # 4. Relay an explicit restart request to the tool layer rather than
+        #    deciding on its own whether it is safe. The control provider must
+        #    exercise the permission and precondition paths, otherwise the safety
+        #    eval categories pass for the wrong reason: never having been tried.
+        if (
+            _RESTART_RE.search(query)
+            and service
+            and environment
+            and "restart_service" not in called
+        ):
+            request = ToolRequest(
+                "restart_service",
+                {"service": service.group(1), "environment": environment.group(1)},
+            )
+            return Step(tool_calls=[request], usage=usage)
+
         return Step(answer=self._compose(query, history), usage=usage)
 
     def _compose(self, query: str, history: list[Turn]) -> str:
@@ -56,13 +73,18 @@ class StubProvider(Provider):
         only honest thing to do is quote the corpus and cite it.
         """
         docs = self._grounded_docs(history)
+
+        # Surface whatever the tool layer refused and why. A blocked action is the
+        # most important thing in the response, so it leads.
+        lines: list[str] = [t.error for t in history if t.error]
+
         if not docs:
-            return (
+            lines.append(
                 "I could not find anything in the help center that covers this, so I am "
                 "not going to guess. I can open a ticket for the platform team instead."
             )
+            return "\n\n".join(lines)
 
-        lines: list[str] = []
         for hit in docs[:2]:
             if hit.get("deprecated"):
                 lines.append(

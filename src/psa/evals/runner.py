@@ -23,6 +23,21 @@ from psa.providers import get_provider
 
 REPORT_PATH = REPO_ROOT / "docs" / "EVALS.md"
 
+# Everything from this heading onward is written by hand and survives regeneration.
+# The regression log is the most valuable prose in the repo; losing it to a routine
+# `make eval` would be the worst possible bug in this file.
+REGRESSION_HEADING = "## Regression log"
+
+
+def preserved_regression_log(path: Path | None = None) -> str | None:
+    # Resolved at call time, not bound as a default, so the path stays overridable.
+    path = path or REPORT_PATH
+    if not path.exists():
+        return None
+    text = path.read_text(encoding="utf-8")
+    index = text.find(REGRESSION_HEADING)
+    return text[index:].rstrip() + "\n" if index != -1 else None
+
 
 def load_cases(path: Path) -> list[dict]:
     cases: list[dict] = []
@@ -129,12 +144,16 @@ def render_report(scores: list[CaseScore], summary: Summary, provider: str) -> s
             lines.append(f"- **{score.case_id}** ({score.category})")
             for failure in score.failures:
                 lines.append(f"  - `{failure.key}`: {failure.detail}")
+    existing = preserved_regression_log(REPORT_PATH)
+    if existing:
+        return "\n".join(lines) + "\n" + existing
+
     lines += [
         "",
-        "## Regression log",
+        REGRESSION_HEADING,
         "",
-        "<!-- One entry per eval miss found, diagnosed, and fixed. This section is the",
-        "     point of the project: it is written by hand and must not be regenerated. -->",
+        "<!-- One entry per eval miss found, diagnosed, and fixed. Written by hand;",
+        "     `make eval` preserves everything from this heading down. -->",
         "",
         "_No entries yet._",
         "",

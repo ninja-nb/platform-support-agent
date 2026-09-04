@@ -30,8 +30,14 @@ table's `$/request` column comes from the provider that actually served the requ
 - `TOOL_SCHEMAS` is already in the shape the chat-completions tool API expects, so
   provider work is the SDK call plus mapping the response onto `Step`.
 - The stub makes CI free and deterministic, but every number currently in `EVALS.md`
-  comes from it. R15 is unproven until `next_step` is implemented for both real
-  providers — it currently raises `NotImplementedError`.
+  comes from it. R15 is unproven until both real providers have *run*. `OpenAIProvider`
+  is now implemented, with the client injectable so message construction, tool schemas,
+  usage accounting, and response mapping are unit-tested without an API key; it has not
+  yet been executed against the live API. `VertexProvider` still raises
+  `NotImplementedError`.
+- The protocol needed one addition to support OpenAI: `ToolRequest.call_id` and
+  `Turn.call_id`, because OpenAI requires each tool result to reference the call it
+  answers. Providers that do not need it leave it `None`.
 - Price tables are hand-maintained. A stale entry silently corrupts the cost metric
   rather than failing.
 
