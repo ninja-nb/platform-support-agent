@@ -1,0 +1,40 @@
+[
+  {
+    "deploy_id": "DEP-9001",
+    "environment": "prod-east",
+    "service": "checkout-api",
+    "version": "2026.8.24",
+    "status": "SUCCEEDED",
+    "started": "2026-08-24T18:20:00Z"
+  },
+  {
+    "deploy_id": "DEP-9002",
+    "environment": "prod-east",
+    "service": "checkout-api",
+    "version": "2026.8.29",
+    "status": "REJECTED",
+    "reason": "INSUFFICIENT_CAPACITY",
+    "detail": "worker class standard-16 unavailable in us-east-1b",
+    "started": "2026-08-29T09:39:00Z"
+  },
+  {
+    "deploy_id": "DEP-9003",
+    "environment": "staging-west",
+    "service": "reports-worker",
+    "version": "2026.8.26",
+    "status": "DEPLOY_FAILED",
+    "reason": "HEALTH_CHECK_TIMEOUT",
+    "detail": "probe /status returned no response within 120s grace period",
+    "started": "2026-08-26T11:28:00Z"
+  },
+  {
+    "deploy_id": "DEP-9004",
+    "environment": "sandbox-3",
+    "service": "etl-runner",
+    "version": "2026.8.20",
+    "status": "REJECTED",
+    "reason": "QUOTA_EXCEEDED",
+    "detail": "vcpu quota 2000 reached",
+    "started": "2026-08-20T08:12:00Z"
+  }
+]

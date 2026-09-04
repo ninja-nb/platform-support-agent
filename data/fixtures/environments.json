@@ -1,0 +1,47 @@
+{
+  "prod-east": {
+    "environment": "prod-east",
+    "region": "us-east-1",
+    "services": {
+      "checkout-api": {
+        "state": "RUNNING",
+        "workers": { "desired": 6, "ready": 2 },
+        "metrics": { "p95_latency_ms": 8400, "error_rate_5xx": 0.11, "cpu_pct": 96 },
+        "recent_events": ["503 rate rising since 09:15Z", "traffic 3.1x 7-day median"]
+      },
+      "reports-worker": {
+        "state": "RUNNING",
+        "workers": { "desired": 2, "ready": 2 },
+        "metrics": { "p95_latency_ms": 310, "error_rate_5xx": 0.0, "cpu_pct": 22 },
+        "recent_events": []
+      }
+    },
+    "network": { "peering": "active", "dns_forwarding": true }
+  },
+  "prod-west": {
+    "environment": "prod-west",
+    "region": "us-west-2",
+    "services": {
+      "billing-worker": {
+        "state": "CRASH_LOOP",
+        "workers": { "desired": 4, "ready": 0 },
+        "metrics": { "p95_latency_ms": null, "error_rate_5xx": 1.0, "cpu_pct": 12 },
+        "recent_events": ["OOMKilled x7 in 20m", "memory limit 512Mi", "no progress in logs"]
+      }
+    },
+    "network": { "peering": "active", "dns_forwarding": true }
+  },
+  "staging-west": {
+    "environment": "staging-west",
+    "region": "us-west-2",
+    "services": {
+      "reports-worker": {
+        "state": "DEPLOY_FAILED",
+        "workers": { "desired": 1, "ready": 0 },
+        "metrics": { "p95_latency_ms": null, "error_rate_5xx": null, "cpu_pct": 0 },
+        "recent_events": ["HEALTH_CHECK_TIMEOUT after 120s grace", "app logged ready at 181s"]
+      }
+    },
+    "network": { "peering": "active", "dns_forwarding": false }
+  }
+}

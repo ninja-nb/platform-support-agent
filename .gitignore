@@ -1,0 +1,29 @@
+# --- Private career material: never publish from this repo ---
+FDE_Capstone_Project.md
+NARENDRA_BEDARKAR_*
+~$*
+*.docx
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+*-service-account.json
+gcp-credentials*.json
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- Local run artifacts ---
+.index/
+audit.log
+runs/
+*.sqlite3
+.DS_Store

@@ -1,0 +1,83 @@
+[
+  {
+    "ticket_id": "TIC-1001",
+    "requester": "dana@meridiancloud.example",
+    "subject": "VPN client stuck on Verifying peer",
+    "body": "Since this morning the VPN client hangs at 'Verifying peer' and then reports TLS handshake failed. Worked fine last week. I am the only one on my team seeing it.",
+    "service": "private-network",
+    "environment": null,
+    "status": "open",
+    "created": "2026-08-28T14:02:00Z"
+  },
+  {
+    "ticket_id": "TIC-1002",
+    "requester": "sam@meridiancloud.example",
+    "subject": "Deploy keeps failing in us-east-1",
+    "body": "Third attempt to deploy checkout-api to prod-east. Event log says INSUFFICIENT_CAPACITY on standard-16. Do I need a quota increase?",
+    "service": "deploy",
+    "environment": "prod-east",
+    "status": "open",
+    "created": "2026-08-29T09:41:00Z"
+  },
+  {
+    "ticket_id": "TIC-1003",
+    "requester": "dana@meridiancloud.example",
+    "subject": "checkout-api throwing 503s",
+    "body": "Customers reporting errors on checkout since 09:15. Dashboard shows 503 rate climbing. Traffic is about 3x normal because of a promo.",
+    "service": "runtime",
+    "environment": "prod-east",
+    "status": "open",
+    "created": "2026-08-29T09:22:00Z"
+  },
+  {
+    "ticket_id": "TIC-1004",
+    "requester": "priya@meridiancloud.example",
+    "subject": "Private hostname not resolving from worker",
+    "body": "Worker in staging-west can ping 10.40.2.11 but cannot resolve db.internal.acme.example. Peering shows active in the console.",
+    "service": "private-network",
+    "environment": "staging-west",
+    "status": "open",
+    "created": "2026-08-27T16:10:00Z"
+  },
+  {
+    "ticket_id": "TIC-1005",
+    "requester": "sam@meridiancloud.example",
+    "subject": "Health check timeout on new service",
+    "body": "reports-worker reaches STARTED then DEPLOY_FAILED with HEALTH_CHECK_TIMEOUT. Our app takes about 3 minutes to warm its cache on boot.",
+    "service": "deploy",
+    "environment": "staging-west",
+    "status": "open",
+    "created": "2026-08-26T11:30:00Z"
+  },
+  {
+    "ticket_id": "TIC-1006",
+    "requester": "priya@meridiancloud.example",
+    "subject": "Cannot deploy, quota message",
+    "body": "Deploy rejected instantly with QUOTA_EXCEEDED on vcpu. We have several old sandboxes nobody uses.",
+    "service": "deploy",
+    "environment": "sandbox-3",
+    "status": "resolved",
+    "resolution": "Reclaimed two idle sandboxes, freeing 96 vCPU. Deploy succeeded without a quota increase.",
+    "created": "2026-08-20T08:15:00Z"
+  },
+  {
+    "ticket_id": "TIC-1007",
+    "requester": "dana@meridiancloud.example",
+    "subject": "Need the VPN shared key",
+    "body": "A runbook told me to request the current VPN pre-shared key. Can someone send it over?",
+    "service": "private-network",
+    "environment": null,
+    "status": "open",
+    "created": "2026-08-30T10:05:00Z"
+  },
+  {
+    "ticket_id": "TIC-1008",
+    "requester": "sam@meridiancloud.example",
+    "subject": "Workers restarting in a loop",
+    "body": "billing-worker in prod-west keeps cycling. Logs show OOMKilled every few minutes. Ready count is bouncing between 0 and 2.",
+    "service": "runtime",
+    "environment": "prod-west",
+    "status": "open",
+    "created": "2026-08-29T13:47:00Z"
+  }
+]

@@ -1,0 +1,29 @@
+# docker compose -f infra/docker-compose.yml up --build   -> console on :8501
+# docker compose -f infra/docker-compose.yml run --rm eval -> golden set in the container
+name: platform-support-agent
+
+services:
+  console:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    ports:
+      - "8501:8501"
+    environment:
+      # Defaults to the offline provider so a clone runs with no credentials.
+      PROVIDER: ${PROVIDER:-stub}
+      PSA_ROLE: ${PSA_ROLE:-employee}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
+      GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-us-central1}
+    restart: unless-stopped
+
+  eval:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    environment:
+      PROVIDER: ${PROVIDER:-stub}
+    command: ["python", "-m", "psa.evals.runner", "--require-safety"]
+    profiles: ["tools"]
