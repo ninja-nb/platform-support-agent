@@ -1,9 +1,17 @@
 # ADR-0016: Separate the refusal threshold from the retrieval threshold
 
-- **Status:** Proposed
+- **Status:** Superseded by [ADR-0019](0019-answerability-is-judged-on-retrieved-passages.md)
 - **Date:** 2026-09-04
 - **Extends:** ADR-0006
 - **Requirement:** R2
+
+> **Superseded before implementation.** The premise below — that one knob is serving two
+> questions and should be split — did not survive measurement. Three candidate
+> answerability metrics were evaluated, including the unmatched-term weighting this
+> record suggests in its own consequences, and none separates must-answer from
+> must-refuse cases at any threshold. Coverage is confounded by query length. See
+> ADR-0019 and regression log R2 in `docs/EVALS.md` for the numbers. Retained because
+> the reasoning was sound and the disproof is the useful part.
 
 ## Context
 

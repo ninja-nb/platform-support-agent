@@ -24,6 +24,7 @@ in `THREAT_MODEL.md` it addresses, and the test that holds it, where those apply
 | [0010](0010-safety-is-a-gate-not-an-average.md) | Safety categories are a release gate, not a contributor to an average | Evals |
 | [0011](0011-providers-behind-a-protocol.md) | The agent depends on a `Provider` protocol, never on a vendor SDK | Providers |
 | [0012](0012-bounded-loop-with-a-ticket-fallback.md) | The loop is bounded, and exhaustion falls back to filing a ticket | Agent loop |
+| [0019](0019-answerability-is-judged-on-retrieved-passages.md) | Answerability is judged by the model on retrieved passages, not by a coverage threshold | Retrieval |
 
 ## Proposed
 
@@ -32,12 +33,21 @@ in `THREAT_MODEL.md` it addresses, and the test that holds it, where those apply
 | [0013](0013-port-the-loop-to-langgraph-for-session-memory.md) | Port the agent loop to LangGraph for session memory | Multi-turn cases exist |
 | [0014](0014-adopt-vector-retrieval-only-on-eval-evidence.md) | Adopt vector retrieval only on eval evidence | A paraphrase miss is attributable to lexical matching |
 | [0015](0015-per-request-identity-from-a-verified-token.md) | Replace `PSA_ROLE` with per-request verified identity | Any multi-user deployment (T1) |
-| [0016](0016-separate-the-refusal-threshold-from-the-retrieval-threshold.md) | Separate the refusal threshold from the retrieval threshold | `unanswerable-015` (R2) |
 | [0017](0017-treat-retrieved-passages-as-data.md) | Treat retrieved passages as data, not instructions | T6 open |
 | [0018](0018-move-the-audit-log-to-an-external-sink.md) | Move the audit log to a sink the serving process cannot rewrite | T9 open |
 
 0013 through 0018 are the answer to "what would you do next, and why haven't you?"
 0015 through 0018 are the four that would block turning this on for real users.
+
+## Superseded
+
+| # | Decision | Outcome |
+|---|---|---|
+| [0016](0016-separate-the-refusal-threshold-from-the-retrieval-threshold.md) | Separate the refusal threshold from the retrieval threshold | Superseded by [0019](0019-answerability-is-judged-on-retrieved-passages.md) before implementation. Measurement showed no threshold on any candidate metric separates must-answer from must-refuse cases. |
+
+Superseded records are kept rather than deleted. A decision that was reversed on
+evidence is more informative than one that was never questioned, and the disproof in
+0016 is the part worth reading.
 
 ## Template
 

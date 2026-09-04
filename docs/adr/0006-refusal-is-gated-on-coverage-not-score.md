@@ -31,7 +31,14 @@ BM25 score is still used for *ranking*; coverage decides *admission*.
 - Coverage is computed over title, heading, and text, so a chunk whose heading names the
   symptom is admitted even when the body phrases it differently.
 - The threshold is a tuning knob to be moved only with eval evidence. The current value
-  is known to be too permissive — see ADR-0016 and the `unanswerable-015` failure.
+  is known to be too permissive — see the `unanswerable-015` failure.
+- **Corrected by [ADR-0019](0019-answerability-is-judged-on-retrieved-passages.md).** The
+  claim above that coverage is "comparable across queries" is too strong. Coverage is
+  *bounded*, which is not the same property. Because it divides by the number of distinct
+  query terms, a verbose but answerable question is diluted by narrative words absent
+  from any runbook, and scores below a terse question the corpus cannot answer at all.
+  Coverage is therefore retained for admission only; it is not an answerability signal,
+  and refusal is decided per ADR-0019.
 - Coverage is term-presence based, so it inherits the paraphrase weakness of ADR-0005: a
   correctly-covered question phrased in different words scores low.
 

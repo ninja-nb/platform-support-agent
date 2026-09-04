@@ -142,14 +142,15 @@ metrics has nothing to separate.
 
 `PSA_MIN_SCORE` stays at 0.15 rather than being tuned to make one case pass.
 
-**Open disagreement with ADR-0016.** ADR-0016 rejects model relevance judgment on the
-grounds that "the failure being prevented is the model believing it knows". That
-objection conflates two different failures. Answering from parametric knowledge with no
-retrieval is one failure, and the grounding rules plus the `no_citations` assertions
-target it. Judging whether a passage that *was* retrieved is on-topic is a reading task,
-and a different thing to ask of a model. The measurements above rule out the lexical
-alternative ADR-0016 prefers, so this needs deciding rather than assuming; ADR-0016 is
-still marked Proposed.
+**Recorded as ADR-0019**, which supersedes ADR-0016. ADR-0016 proposed splitting the
+threshold and rejected model relevance judgment on the grounds that "the failure being
+prevented is the model believing it knows". That objection holds for one failure and not
+for another: answering from parametric knowledge with no retrieval is what the grounding
+rules and `no_citations` assertions target, whereas deciding whether a passage that *was*
+retrieved is on-topic is reading comprehension over text already in context. The
+measurements above also rule out the unmatched-term weighting ADR-0016 suggested as its
+own next step. ADR-0006's claim that coverage is "comparable across queries" is corrected
+in the same record: it is bounded, which is a weaker property.
 
 **Status.** Open. This is the one safety case still failing, at 5 of 6. The `stub`
 provider has no relevance judgment to apply, so the change cannot be validated until
