@@ -193,7 +193,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  wrote {REPORT_PATH.relative_to(REPO_ROOT)}\n")
 
     if args.json_out:
-        Path(args.json_out).write_text(
+        json_path = Path(args.json_out)
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        json_path.write_text(
             json.dumps(
                 {"summary": asdict(summary), "cases": [asdict(s) for s in scores]}, indent=2
             ),
