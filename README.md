@@ -89,8 +89,11 @@ would have meant the eval suite tested a different code path than production use
 Roles come from the *server* environment, never from the client. A client that could
 name its own role would make the permission table decorative.
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and
-[`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).
+What the agent must do is in [`docs/PRD.md`](docs/PRD.md), stated as behaviours with the
+eval case that owns each one. How it is built is in
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), with one record per decision in
+[`docs/adr/`](docs/adr/README.md) — including the six decisions not yet made. What an
+adversary can do to it is in [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).
 
 ### Tool permissions
 

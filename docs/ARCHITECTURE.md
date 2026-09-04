@@ -41,97 +41,39 @@ anything downstream:
 
 ## Decisions
 
-### Tools are functions; MCP is a transport
+Each decision has its own record in [`docs/adr/`](adr/README.md), with the context, the
+consequences including what got worse, and the alternatives rejected. This section is an
+index; the records are the content.
 
-Authorization, the confirmation gate, and the audit log live in `call_tool`, not in the
-MCP server. `mcp_server/server.py` is a thin adapter.
+| Area | Decision | ADR |
+|---|---|---|
+| Tool surface | Tools are plain functions behind one dispatcher; MCP is a transport | [0001](adr/0001-mcp-is-a-transport-not-the-boundary.md) |
+| Authorization | Role is established server-side, never asserted by the caller | [0002](adr/0002-role-is-established-server-side.md) |
+| Authorization | Unknown tools fail closed | [0003](adr/0003-unknown-tools-fail-closed.md) |
+| Safety | Irreversible actions require a target-bound confirmation round-trip | [0004](adr/0004-irreversible-actions-require-a-bound-confirmation.md) |
+| Retrieval | Lexical BM25 baseline behind a `Retriever` protocol | [0005](adr/0005-lexical-baseline-behind-a-retriever-protocol.md) |
+| Retrieval | Refusal is gated on term coverage, not BM25 score | [0006](adr/0006-refusal-is-gated-on-coverage-not-score.md) |
+| Retrieval | Superseding documents are promoted structurally, not by score penalty | [0007](adr/0007-superseding-documents-are-promoted-structurally.md) |
+| Retrieval | Chunk on heading boundaries; weight titles at index time | [0008](adr/0008-chunk-on-heading-boundaries.md) |
+| Evals | Behaviour classification lives in the policy layer, with fixed precedence | [0009](adr/0009-behavior-classification-lives-in-the-policy-layer.md) |
+| Evals | Safety categories are a release gate, not a contributor to an average | [0010](adr/0010-safety-is-a-gate-not-an-average.md) |
+| Providers | The agent depends on a `Provider` protocol, never on a vendor SDK | [0011](adr/0011-providers-behind-a-protocol.md) |
+| Agent loop | The loop is bounded; exhaustion falls back to filing a ticket | [0012](adr/0012-bounded-loop-with-a-ticket-fallback.md) |
 
-The alternative — enforcing permissions in the MCP handler — would mean the eval suite
-exercised a different code path than a real MCP client, so the tests would not be
-evidence about the deployed behaviour. It also would have left a second, unguarded path
-to the tool implementations for any in-process caller.
-
-Denials and confirmation prompts are returned to the model as tool *results*, not
-transport errors. The agent has to read them and change course, which it cannot do if
-the transport swallows them.
-
-### Roles come from the server environment
-
-`PSA_ROLE` is read server-side and never accepted from the client. Letting a client
-declare its own role would reduce the permission table to documentation.
-
-In a real deployment this is where the customer's IdP goes, and the role would be
-derived from a verified token rather than an environment variable. The shape of the
-check does not change; only the source of the identity does.
-
-### Unknown tools fail closed
-
-`policy_for` raises on any tool without an explicit entry in `TOOL_POLICIES`. Adding a
-tool without deciding its permissions is therefore a hard error at call time rather
-than an accidental grant. This is the one place where being annoying is correct.
-
-### Confirmation tokens are bound to their target
-
-The token is `sha256("restart|service|environment|user")`, truncated. A token minted for
-`billing-worker` in `prod-west` will not authorize `checkout-api` in `prod-east`, which
-closes the obvious replay: the agent obtains one legitimate confirmation and then reuses
-it for a different, unapproved action. `test_confirmation_token_is_not_transferable`
-covers this.
-
-The gate is a round-trip, not a flag on the call. The first call *cannot* execute; it
-can only return the prompt.
-
-### Coverage, not BM25 score, decides refusal
-
-BM25 scores are unbounded and corpus-dependent, so no fixed threshold on them means
-anything. Refusal is instead gated on *coverage*: the fraction of distinct content terms
-in the query that appear in the chunk. Coverage is bounded 0..1 and is comparable across
-queries, which makes it usable as an absolute "do we actually know this?" test.
-
-`PSA_MIN_SCORE` (default 0.15) is the threshold, and it is a tuning knob to be moved
-only with eval evidence. The current value is known to be too permissive — see the
-`unanswerable-015` failure in `docs/EVALS.md`, where a query about Snowflake
-certificate rotation still retrieves the VPN certificate document.
-
-### Superseding documents are promoted structurally
-
-Deprecated documents stay in the index because users quote them. They take a relevance
-penalty (`DEPRECATED_PENALTY = 0.35`), but the penalty is not what provides the
-guarantee — `_promote_replacements` does, by injecting a document's replacement above it
-whenever the deprecated document appears in the results.
-
-This was driven by an actual test failure: for "VPN pre-shared key rotate shared key",
-the retired document beat its replacement even with the penalty applied, because the
-retired document is genuinely the better lexical match for a user reading from it. Score
-tuning would have papered over that for one query while leaving the invariant unproven.
-
-### Heading-aware chunking
-
-Documents split on `##` boundaries, which keeps "Resolution" and "Escalate when" as
-separate retrievable units. The escalation eval cases depend on this: an escalation
-condition buried in a whole-document chunk competes with the resolution steps instead of
-being retrievable on its own.
-
-Titles and headings are weighted by repetition at index time, so a query naming a
-symptom reaches the right document even when the body phrases it differently.
-
-### Behaviour classification lives in the policy layer
-
-The eval harness scores a `behavior` label, so how that label is derived is part of the
-contract and lives in `agent/policy.py` rather than being inferred inside the runner.
-
-Precedence is deliberate: `propose_action` > `deny` > `refuse` > `ask` > `escalate` >
-`create_ticket` > `answer`. Denial outranks answering because a run that denied
-something and then answered anyway is a denial, and reporting it as an answer would hide
-exactly the case that matters most.
+Decisions that have **not** been made yet are recorded as proposals in ADR-0013 through
+ADR-0018, so the tradeoff is written down before it is settled.
 
 ## Known gaps
 
-- Providers are interfaces only; `next_step` raises `NotImplementedError`.
-- Single-turn. No session memory, so "restart it" does not resolve against the previous
-  turn's service. That is the main reason to port to LangGraph.
-- `PSA_MIN_SCORE` is too permissive; see above.
-- The audit log is a local file. Real deployment needs an append-only sink the
-  application cannot rewrite.
-- No rate limiting or prompt-injection defence on retrieved content. A corpus document
-  is currently trusted text; see `THREAT_MODEL.md`.
+Each gap below has a proposed ADR stating what would be done about it and what evidence
+should trigger it.
+
+| Gap | Consequence | ADR |
+|---|---|---|
+| Providers are interfaces only; `next_step` raises `NotImplementedError` | Every number in `EVALS.md` comes from the rule-based stub, so provider portability (R15) is unproven | [0011](adr/0011-providers-behind-a-protocol.md) |
+| Single-turn; no session memory, so "restart it" does not resolve against the previous turn's service | A confirmation is approved without the agent retaining why it was proposed | [0013](adr/0013-port-the-loop-to-langgraph-for-session-memory.md) |
+| `PSA_MIN_SCORE` is too permissive | `unanswerable-015` answers an off-corpus question with a citation, which is the failure R2 exists to prevent | [0016](adr/0016-separate-the-refusal-threshold-from-the-retrieval-threshold.md) |
+| Retrieved corpus content is trusted text; no prompt-injection defence | Threat T6, open | [0017](adr/0017-treat-retrieved-passages-as-data.md) |
+| The audit log is a local file the serving process can rewrite | Threat T9, open. Denial records are a claim rather than evidence | [0018](adr/0018-move-the-audit-log-to-an-external-sink.md) |
+| One process serves one role and one user | Threat T1. Not deployable for more than one caller | [0015](adr/0015-per-request-identity-from-a-verified-token.md) |
+| No rate limiting and no spend cap | Threat T11; the step ceiling bounds one request, not a caller issuing thousands | [0012](adr/0012-bounded-loop-with-a-ticket-fallback.md) |
